@@ -279,18 +279,12 @@ if analyze:
     )
 
     st.subheader("AI Analyst Briefing")
-
+    
     if st.button("Generate Local AI Briefing"):
 
         with st.spinner("Phi is analyzing the investment..."):
 
-            try:
-                client = OpenAI(
-                    base_url="http://localhost:11434/v1",
-                    api_key="ollama"
-                )
-
-                prompt = f"""
+            prompt = f"""
 You are a senior investment analyst advising a portfolio manager.
 
 Write a professional executive-level investment briefing for {ticker}.
@@ -306,23 +300,23 @@ PROPOSED POSITION:
 Portfolio allocation: {allocation:.1f}%
 Position size: ${position_dollars:,.0f}
 
-INVESTMENT DATA:
-{ticker} mean monthly return: {stock_mean:.2%}
+HISTORICAL ANALYSIS:
+Stock mean monthly return: {stock_mean:.2%}
 S&P 500 mean monthly return: {mkt_mean:.2%}
-
-{ticker} monthly standard deviation: {stock_std:.2%}
+Stock monthly standard deviation: {stock_std:.2%}
 S&P 500 monthly standard deviation: {mkt_std:.2%}
-
 Beta: {beta:.3f}
 Correlation with S&P 500: {correlation:.3f}
 R-squared: {r_squared:.2%}
 
+LIQUIDITY:
 Current Ratio: {current_ratio:.2f}
 Quick Ratio: {quick_ratio:.2f}
 Cash Ratio: {cash_ratio:.2f}
 Working Capital: ${working_capital:,.0f}
 
-Beta contribution from proposed position: {beta_contribution:.3f}
+POSITION RISK:
+Beta contribution: {beta_contribution:.3f}
 
 Your briefing should:
 1. Compare the stock's mean monthly return with the S&P 500.
@@ -344,6 +338,13 @@ IMPORTANT RULES:
 - End immediately after the investment briefing.
 - Keep the entire response under 300 words.
 """
+
+            try:
+                client = OpenAI(
+                    base_url="http://localhost:11434/v1",
+                    api_key="ollama"
+                )
+
                 response = client.chat.completions.create(
                     model="phi3",
                     messages=[
@@ -352,12 +353,14 @@ IMPORTANT RULES:
                 )
 
                 st.session_state.local_briefing = response.choices[0].message.content
-
                 st.success("Local AI analysis complete!")
 
-            except Exception as e:
-                st.error(f"AI briefing could not be generated: {e}")
-
+            except Exception:
+                st.warning(
+                    "Local Phi analysis requires Ollama to be installed and running "
+                    "on the user's computer. The cloud version of this dashboard "
+                    "does not have access to the local Ollama model."
+                )
     st.subheader("Frontier AI Analyst Briefing")
 
     api_key = st.text_input(
